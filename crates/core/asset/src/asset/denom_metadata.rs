@@ -345,6 +345,10 @@ impl Metadata {
         self.starts_with("auctionnft_")
     }
 
+    pub fn is_withdrawn_auction_nft(&self) -> bool {
+        self.starts_with("auctionnft_2")
+    }
+
     pub fn is_opened_position_nft(&self) -> bool {
         let prefix = "lpnft_opened_".to_string();
 
@@ -367,7 +371,8 @@ impl Metadata {
     /// if this is an IBC transferred asset, `None` otherwise.
     pub fn ibc_transfer_path(&self) -> anyhow::Result<Option<(String, String)>> {
         let base_denom = self.base_denom().denom;
-        let re = Regex::new(r"^(?<path>transfer/channel-[0-9]+)/(?<denom>\w+)$")
+        // The base denom portion of an IBC asset path may contain slashes: https://github.com/cosmos/ibc/issues/737
+        let re = Regex::new(r"^(?<path>transfer/channel-[0-9]+)/(?<denom>[\w\/]+)$")
             .context("error instantiating denom matching regex")?;
 
         let Some(caps) = re.captures(&base_denom) else {
